@@ -1,3 +1,5 @@
+import { pathToFileURL } from 'url'
+
 async function getReports(): Promise<string[]> {
   const file = Bun.file(import.meta.dir + '/input.txt');
   const raw = await file.text();
@@ -8,7 +10,7 @@ function parseLevels(line: string): number[] {
   return line.match(/(\d+)/g)!.map(Number);
 }
 
-function isSafeReport(levels: number[], allowedRemovals = 1): boolean {
+export function isSafeReport(levels: number[], allowedRemovals = 1): boolean {
   let isIncreasing = levels[0] < levels[1];
 
   for (let i = 1; i < levels.length; i++) {
@@ -17,9 +19,11 @@ function isSafeReport(levels: number[], allowedRemovals = 1): boolean {
 
     if (!areLevelsChangingGradually(lowerLevel, higherLevel)) {
       if (allowedRemovals) {
-        const withoutCurrent = levels.toSpliced(i, 1);
-        const withoutPrevious = levels.toSpliced(i - 1, 1);
-        return isSafeReport(withoutPrevious, allowedRemovals - 1) || isSafeReport(withoutCurrent, allowedRemovals - 1);
+        for (let removalIdx = 0; removalIdx < levels.length; removalIdx++) {
+          if (isSafeReport(levels.toSpliced(removalIdx, 1), allowedRemovals - 1)) {
+            return true;
+          }
+        }
       }
       return false;
     }
@@ -32,10 +36,13 @@ function areLevelsChangingGradually(lowerLevel: number, higherLevel: number): bo
   return diff <= 3 && diff >= 1;
 }
 
-function onlySafeReports(reports: string[]): string[] {
+export function onlySafeReports(reports: string[]): string[] {
   return reports.filter(r => isSafeReport(parseLevels(r)));
 }
 
-console.log(onlySafeReports(await getReports()).length);
+
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  console.log(onlySafeReports(await getReports()).length);
+}
 
 export { }
