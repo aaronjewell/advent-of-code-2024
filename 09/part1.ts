@@ -12,8 +12,7 @@ let checksum = 0;
 let finalPosition = 0;
 
 let left = 0;
-let right = dm.length - (dm.length % 2);
-
+let right = dm.length - 1;
 while (left <= right) {
   while (dm[left]) { // block count of left file
     checksum += leftFileId * finalPosition;
